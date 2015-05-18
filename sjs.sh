@@ -104,6 +104,6 @@ cat)
   inspect "$@"
   ;;
 *)
-  echo $"Usage: $0 {add|run|run-once|ls}"
+  echo $"Usage: $0 {add|run|run-once|ls|cat}"
   exit 1
 esac
