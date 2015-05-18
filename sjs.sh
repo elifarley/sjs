@@ -5,6 +5,13 @@ dir_item_count() {
   echo $(( $(\ls -afq "$1" 2>/dev/null | wc -l )  -2 ))
 }
 
+add() {
+  (( 2 == $# )) || return 1
+  local when="$1"; shift
+  local label="$1"; shift
+  cat > "$SJS_QDIR"/todo/"$when.$label-$RANDOM"
+}
+
 run_loop() {
   while true; do
     run_once
@@ -45,7 +52,14 @@ done
 } # run_once
 
 stats() {
-  ls -af "$SJS_QDIR"/{todo,running,done,error} | grep -v '^\.'
+  echo "SJS_QDIR: $SJS_QDIR"
+  (($#)) || {
+    (cd "$SJS_QDIR" && find -type f) | cut -d/ -f2- | sort && \
+    return 0
+  }
+
+  (cd "$SJS_QDIR" && find -iname "*$1*") | cut -d/ -f2- | sort
+
 }
 
 (($#)) || exit 1
@@ -53,6 +67,9 @@ stats() {
 OP="$1"; shift
 
 case "$OP" in
+add)
+  add "$@"
+  ;;
 run)
   run_loop "$@"
   ;;
@@ -60,6 +77,6 @@ run-once)
   run_once "$@"
   ;;
 stats)
-  stats
+  stats "$@"
   ;;
 esac
