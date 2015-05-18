@@ -51,7 +51,7 @@ done
 
 } # run_once
 
-stats() {
+list() {
   echo "SJS_QDIR: $SJS_QDIR"
   (($#)) || {
     (cd "$SJS_QDIR" && find -type f) | cut -d/ -f2- | sort && \
@@ -61,8 +61,6 @@ stats() {
   (cd "$SJS_QDIR" && find -iname "*$1*") | cut -d/ -f2- | sort
 
 }
-
-(($#)) || exit 1
 
 OP="$1"; shift
 
@@ -76,7 +74,10 @@ run)
 run-once)
   run_once "$@"
   ;;
-stats)
-  stats "$@"
+ls)
+  list "$@"
   ;;
+*)
+  echo $"Usage: $0 {add|run|run-once|ls}"
+  exit 1
 esac
