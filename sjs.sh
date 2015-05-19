@@ -16,7 +16,7 @@ add() {
   (( 2 == $# )) || return 1
   local when="$1"; shift
   local label="$1"; shift
-  _create_dirs
+  _create_dirs || return $?
   local r="$RANDOM"
   cat > "$SJS_QDIR"/todo/"$when.$label-$r" && \
   echo $r
@@ -31,7 +31,7 @@ run_loop() {
 
 run_once() {
 
-  _create_dirs
+  _create_dirs || return $?
 
   local qcount=$(dir_item_count "$SJS_QDIR"/todo) || {
     echo "todo dir not found: '$SJS_QDIR/todo/"; return 1
@@ -56,9 +56,10 @@ run_once() {
 
     running_path="$SJS_QDIR/running/$i"
     mv "$SJS_QDIR/todo/$i" "$(dirname "$running_path")" && \
-    time bash "$running_path" 2>&1 > "$running_path".out \
-    && { echo -e "\nItem $i done!"; mv "$running_path"* "$SJS_QDIR/done/"; } \
-    || { echo -e "\n### ERROR in $i ###"; mv "$running_path"* "$SJS_QDIR/error/"; }
+    ( time bash "$running_path" 2>&1 > "$running_path".out \
+      && { echo -e "\nItem $i done!"; mv "$running_path"* "$SJS_QDIR/done/"; } \
+      || { echo -e "\n### ERROR in $i ###"; mv "$running_path"* "$SJS_QDIR/error/"; } \
+    & )
 
   done
 
@@ -66,7 +67,7 @@ run_once() {
 
 list() {
   echo "SJS_QDIR: $SJS_QDIR"
-  _create_dirs
+  _create_dirs || return $?
   (($#)) || {
     (cd "$SJS_QDIR" && find -type f) | cut -d/ -f2- | sort && \
     return 0
@@ -79,7 +80,7 @@ list() {
 inspect() {
   (( $# == 1 )) || return 1
   echo "SJS_QDIR: $SJS_QDIR"
-  _create_dirs
+  _create_dirs || return $?
 
   (cd "$SJS_QDIR" && find -iname "*$1*" -exec cat "$SJS_QDIR"/{} \;)
 
