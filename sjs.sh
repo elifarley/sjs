@@ -1,5 +1,11 @@
 SJS_QDIR=${SJS_QDIR:-~/.sjs}
-SJS_DATE_FORMAT='%Y-%m-%d-%H:%M'
+SJS_DATE_FORMAT='%Y-%m-%d.%H:%M'
+
+trim() {
+  # Disable file globbing; coalesce inner whitespace;
+  # trim leading and trailing whitespace
+  (set -f; echo $@)
+}
 
 dir_item_count() {
   test -d "$1" && \
@@ -12,10 +18,14 @@ _create_dirs() {
   for d in todo running done error trash; do p="$SJS_QDIR"/$d; test -d "$p" || mkdir "$p"; done
 }
 
+# Examples:
+# add '2015-06-02 18:08 3 hours ago' my-label
+# add 2015-06-02.18:08 other-label
 add() {
   (( 2 == $# )) || return 1
-  local when="$1"; shift
-  local label="$1"; shift
+  local when=$(trim $1 | tr '.' ' '); shift
+  local label=$(trim $1); shift
+  when=$( date -d "$when" +"$SJS_DATE_FORMAT" ) || return $?
   _create_dirs || return $?
   local r="$RANDOM"
   cat > "$SJS_QDIR"/todo/"$when.$label-$r" && \
@@ -48,7 +58,7 @@ run_once() {
 
   for i in $(\ls -af "$SJS_QDIR"/todo/ | grep -v '^\.' | sort); do
 
-    when="${i%%.*}"
+    when="${i%.*}"
     test "$(date +"$SJS_DATE_FORMAT")" \> "$when" || continue
 
     joblabel="${i##*.}"
