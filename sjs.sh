@@ -4,16 +4,11 @@ SJS_DATE_FORMAT='%Y-%m-%d.%H:%M'
 # Serial Distributed Unique TimeStamp
 dutstamp() { echo "$(date +%s)$(date +%N | head -c 3)" ;}
 
-trim() {
-  # Disable file globbing; coalesce inner whitespace;
-  # trim leading and trailing whitespace
-  (set -f; echo $@)
-}
+# Disable file globbing; coalesce inner whitespace;
+# trim leading and trailing whitespace
+trim() { (set -f; echo $@) ;}
 
-dir_item_count() {
-  test -d "$1" && \
-  echo $(( $(\ls -afq "$1" 2>/dev/null | wc -l )  -2 ))
-}
+dir_count() { test -d "$1" && echo $(( $(\ls -afq "$1" 2>/dev/null | wc -l )  -2 )) ;}
 
 _create_dirs() {
   test -d "$SJS_QDIR" || mkdir "$SJS_QDIR"
@@ -46,13 +41,13 @@ run_once() {
 
   _create_dirs || return $?
 
-  local qcount=$(dir_item_count "$SJS_QDIR"/todo) || {
+  local qcount=$(dir_count "$SJS_QDIR"/todo) || {
     echo "todo dir not found: '$SJS_QDIR/todo/"; return 1
   }
 
   ((qcount)) || echo "Waiting for jobs at '$SJS_QDIR/todo/'..."
 
-  until qcount=$(dir_item_count "$SJS_QDIR"/todo) && ((qcount > 0)); do sleep 1; done
+  until qcount=$(dir_count "$SJS_QDIR"/todo) && ((qcount > 0)); do sleep 1; done
   ((qcount)) || { echo "Unexpected qcount: $qcount"; return 1; }
 
   echo "Found $qcount jobs"
