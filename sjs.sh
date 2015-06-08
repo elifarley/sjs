@@ -1,8 +1,10 @@
 SJS_QDIR=${SJS_QDIR:-~/.sjs}
 SJS_DATE_FORMAT='%Y-%m-%d.%H:%M'
 
-# Serial Distributed Unique TimeStamp
+# Serial Distributed Unique TimeStamp in Decimal
 dutstamp() { echo "$(date +%s)$(date +%N | head -c 3)" ;}
+# Serial Distributed Unique TimeStamp in Hex
+dutstamp_hex() { printf '%x\n' $(dutstamp) ;}
 
 # Disable file globbing; coalesce inner whitespace;
 # trim leading and trailing whitespace
@@ -25,7 +27,7 @@ add() {
   local label=$(trim $1); shift
   when=$( date -d "$when" +"$SJS_DATE_FORMAT" ) || return $?
   _create_dirs || return $?
-  local id="$(dutstamp)"
+  local id="$(dutstamp_hex)"
   cat > "$SJS_QDIR"/todo/"$when.$label-$id" && \
   echo "$id@$when"
 }
