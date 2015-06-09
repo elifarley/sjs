@@ -1,10 +1,10 @@
 SJS_QDIR=${SJS_QDIR:-~/.sjs}
 SJS_DATE_FORMAT='%Y-%m-%d.%H:%M'
 
-# Serial Distributed Unique TimeStamp in Decimal
-dutstamp() { echo "$(date +%s)$(date +%N | head -c 3)" ;}
-# Serial Distributed Unique TimeStamp in Hex
-dutstamp_hex() { printf '%x\n' $(dutstamp) ;}
+# TimeStamp in Decimal
+millistamp() { local n=$(date +%s%N); echo "${n%??????}" ;}
+# TimeStamp in Hex
+millistamp_hex() { printf '%x\n' $(millistamp) ;}
 
 # Disable file globbing; coalesce inner whitespace;
 # trim leading and trailing whitespace
@@ -19,16 +19,18 @@ _create_dirs() {
 }
 
 # Examples:
-# add '2015-06-02 18:08 3 hours ago' my-label
+# add 2015-06-02 18:08 3 hours ago my-label
 # add 2015-06-02.18:08 other-label
+# add '2015-06-02 18:08'
 add() {
-  (( 2 == $# )) || return 1
-  local when=$(trim $1 | tr '.' ' '); shift
-  local label=$(trim $1); shift
+  (( $# )) || { echo "Usage: $0 add <WHEN> [LABEL]"; return 1 ;}
+  local when=$(trim "${@:1:$#-1}" | tr '.' ' ') label=''
+  test "$when" && label=$(trim "${@:$#}") || when="$1"
+
   when=$( date -d "$when" +"$SJS_DATE_FORMAT" ) || return $?
   _create_dirs || return $?
-  local id="$(dutstamp_hex)"
-  cat > "$SJS_QDIR"/todo/"$when.$label-$id" && \
+  local id="$(millistamp_hex)"
+  cat > "$SJS_QDIR"/todo/"$when.${label:+$label-}$id" && \
   echo "$id@$when"
 }
 
