@@ -24,10 +24,10 @@ _create_dirs() {
 # add '2015-06-02 18:08'
 add() {
   (( $# )) || { echo "Usage: $0 add <WHEN> [LABEL]"; return 1 ;}
-  local when=$(trim "${@:1:$#-1}" | tr '.' ' ') label=''
+  local when=$(trim "${@:1:$#-1}") label=''
   test "$when" && label=$(trim "${@:$#}") || when="$1"
 
-  when=$( date -d "$when" +"$SJS_DATE_FORMAT" ) || return $?
+  when=$( date -d "${when//./ }" +"$SJS_DATE_FORMAT" ) || return $?
   _create_dirs || return $?
   local id="$(millistamp_hex)"
   cat > "$SJS_QDIR"/todo/"$when.${label:+$label-}$id" && \
