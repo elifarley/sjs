@@ -1,16 +1,29 @@
 SJS_QDIR=${SJS_QDIR:-~/.sjs}
 SJS_DATE_FORMAT='%Y-%m-%d.%H:%M'
 
+# --------- <Helper Functions> ---------
+hex2bytes () {
+  local b=0; while test $b -lt ${#1} ; do
+  printf "\\x${1:$b:2}"; ((b += 2)); done
+}
+pipehex2bytes () { while read -r b file; do hex2bytes $b; done ;}
+
+hex2b64_padded() { pipehex2bytes | base64 -w0 | tr '/' '_' ;}
+hex2b64() { local r=$(hex2b64_padded); echo ${r%%=*} ;}
+
 # TimeStamp in Decimal
 millistamp() { local n=$(date +%s%N); echo "${n%??????}" ;}
 # TimeStamp in Hex
 millistamp_hex() { printf '%x\n' $(millistamp) ;}
+# TimeStamp in Base64 - smaller, case-sensitive
+millistamp_b64() { millistamp_hex | hex2b64 ;}
 
 # Disable file globbing; coalesce inner whitespace;
 # trim leading and trailing whitespace
 trim() { (set -f; echo $@) ;}
 
 dir_count() { test -d "$1" && echo $(( $(\ls -afq "$1" 2>/dev/null | wc -l )  -2 )) ;}
+# --------- </Helper Functions> ---------
 
 _create_dirs() {
   test -d "$SJS_QDIR" || mkdir "$SJS_QDIR"
@@ -29,7 +42,7 @@ add() {
 
   when=$( date -d "${when//./ }" +"$SJS_DATE_FORMAT" ) || return $?
   _create_dirs || return $?
-  local id="$(millistamp_hex)"
+  local id="$(millistamp_b64)"
   cat > "$SJS_QDIR"/todo/"$when.${label:+$label-}$id" && \
   echo "$id@$when"
 }
