@@ -3,12 +3,12 @@ SJS_DATE_FORMAT='%Y-%m-%d.%H:%M'
 
 # --------- <Helper Functions> ---------
 hex2bytes () {
-  local b=0; while test $b -lt ${#1} ; do
+  local b=0; while (( b < ${#1} )) ; do
   printf "\\x${1:$b:2}"; ((b += 2)); done
 }
 pipehex2bytes () { while read -r b file; do hex2bytes $b; done ;}
 
-hex2b64_padded() { pipehex2bytes | base64 -w0 | tr '/' '_' ;}
+hex2b64_padded() { pipehex2bytes | base64 -w0 | tr '+/' '-_' ;}
 hex2b64() { local r=$(hex2b64_padded); echo ${r%%=*} ;}
 
 # TimeStamp in Decimal
